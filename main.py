@@ -1,53 +1,39 @@
 from keep_alive import keep_alive
-import discord
-import discord.ext
-from discord.ext import commands
-from discord.commands import Option
 import os
 import requests
 import json
 import datetime
 from random import randint
-# ^^ All of our necessary imports
+from dotenv import load_dotenv
 
-#Define our bot
-bot = commands.Bot()
+load_dotenv() # load all the variables from the env file
+
+import discord
+
+bot = discord.Bot()
+
+"""
 weather_token = os.environ['WEATHER_API_KEY']
-
-def mailgun_send(email_address, verification_code):
-	return requests.post(
-		"https://api.mailgun.net/v3/{}/messages".format(os.environ.get('MAILGUN_DOMAIN')),
-		auth=("api", os.environ.get('MAILGUN_API_KEY')),
-		data={"from": "KESBot <mailgun@{}>".format(os.environ.get('MAILGUN_DOMAIN')),
-			"to": email_address,
-			"subject": "Verify your server email",
-			"text": "Please verify your identity by posting the following code below:\n"+str(verification_code)})
-
-def email_check(email):
-  if email.find("@kes.net") != -1:
-    code= randint(100000,999999)
-    mailgun_send(email, code)
-  elif email.find("@kes.net") == -1:
-    return 404
-  else:
-    return 403
+"""
     
 @bot.event
 async def on_ready():
-    code = -1
-    await bot.change_presence(
+  print(f"We have logged in as {bot.user}")
+  await bot.change_presence(
         status=discord.Status.online,
-        activity=discord.Game(name='KESBot | /help | /kes')
+        activity=discord.Game(name='BobBot | /help | /Bob')
     )  #Bot status, change this to anything you like
-    print("Bot online"
-          )  #will print "bot online" in the console when the bot is online
+  print("Bot online")  #will print "bot online" in the console when the bot is online
 
 
 #Send message "pong" when user sends /ping
-@bot.slash_command(name="kes", description="KESBot is here!")
-async def kes(ctx):
+@bot.slash_command(name="bob", description="BobBot is here!")
+async def bob(ctx):
     await ctx.respond(content="Hi! I'm still here")
 
+@bot.slash_command(name="ping", description=":-)")
+async def Bob(ctx):
+    await ctx.respond(content="pong!")
 
 # Space given text by user
 @bot.slash_command(name="fact", description="Make me say a cool fact")
@@ -66,7 +52,7 @@ async def fact(ctx):
                               timestamp=datetime.datetime.now(),
                               description=parsed)
         embed.set_author(
-            name="KESBot's FACTS",
+            name="BobBot's FACTS",
             icon_url=
             '''https://drive.google.com/uc?export=download&id=1dx4JTP4dK97GY7sDmaqnntK7-manXx0L'''
         )
@@ -94,7 +80,7 @@ async def joke(ctx):
                           timestamp=datetime.datetime.now(),
                           description=original)
     embed.set_author(
-        name="KESBot's lame jokes",
+        name="BobBot's jokes",
         icon_url=
         "https://drive.google.com/uc?export=download&id=1dx4JTP4dK97GY7sDmaqnntK7-manXx0L"
     )
@@ -112,7 +98,7 @@ async def quote(ctx):
                           color=0xebb907,
                           timestamp=datetime.datetime.now())
     embed.set_author(
-        name="KESBot's Zen Quotes",
+        name="BobBot's Zen Quotes",
         icon_url=
         '''https://drive.google.com/uc?export=download&id=1dx4JTP4dK97GY7sDmaqnntK7-manXx0L'''
     )
@@ -128,14 +114,14 @@ async def help(ctx):
                           timestamp=datetime.datetime.now(),
                           color=0xebb907)
     embed.set_author(
-        name="KESBot Help",
+        name="BobBot Help",
         icon_url=
         "https://drive.google.com/uc?export=download&id=1dx4JTP4dK97GY7sDmaqnntK7-manXx0L"
     )
     embed.add_field(name="/help",
                     value="Displays this help menu.",
                     inline=False)
-    embed.add_field(name="/kes", value="Tests the KESBot.", inline=False)
+    embed.add_field(name="/Bob", value="Tests BobBot.", inline=False)
     embed.add_field(name="/quote", value="Gives you a quote.", inline=False)
     embed.add_field(name="/fact",
                     value="Gives out a very cool fact.",
@@ -154,43 +140,45 @@ async def help(ctx):
     await ctx.respond(embed=embed)
 
 
-
-@bot.slash_command(name="verify", description="Verifies that you are from KES.")
-async def verify(
-  ctx: discord.ApplicationContext, 
-  user: discord.Member,
-  email: Option(str, 
-    "email", 
-    required = True, 
-    default = ''
-  )
-):
-  role = discord.utils.get(ctx.guild.roles, name="Verified")
-  if role in user.roles:
-    await ctx.respond("You/he/she/they have already been verified!!!!1!111!")
-  else:
-    email_check(email)
-    if email_check == 404:
-      await ctx.respond("Incorrect email. Check that it has a @kes.net at the end")
-    elif email_check == 403:
-      await ctx.respond("Something went wrong. Please try again after a few minutes.")
-    elif email_check == 402:
-      await ctx.respond("Something went wrong. Please try again after a few minutes.")
-    elif email_check == 200:
-      await ctx.respond("Email sent to your inbox. Please check your spam for the code and type it in here.")
-
-
+"""
 @bot.slash_command(name="weather", description="Find the weather in a certain place")
 async def weather(ctx, place: discord.Option(str)):
-  response = requests.request("GET", f"https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/{place}?unitGroup=metric&key={weather_token}&contentType=json")
+  response = requests.request("GET", "https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/london?unitGroup=metric&include=days&key=52ZZPYY6U92CNSYCA5PFC7872&contentType=json")
   jsonData = response.json()
+  address = jsonData["resolvedAddress"]
+  desc = jsonData["days"][0]["description"]
+  title = f"Weather in {address}"
+  temp = jsonData["days"][0]["temp"]
+  tempmax = jsonData["days"][0]["tempmax"]
+  tempmin = jsonData["days"][0]["tempmin"]
+  feelslike = jsonData["days"][0]["feelslike"]
+  percip = jsonData["days"][0]["precipprob"]
+  cond = jsonData["days"][0]["conditions"]
+  sunset = jsonData["days"][0]["sunset"]
+  sunrise = jsonData["days"][0]["sunrise"]
+  embed = discord.Embed(title=title,
+                             description=desc,
+                          timestamp=datetime.datetime.now(),
+                          color=0xebb907)
+  embed.set_author(
+        name="BobBot Weather",
+        icon_url=
+        "https://drive.google.com/uc?export=download&id=1dx4JTP4dK97GY7sDmaqnntK7-manXx0L"
+  )
   if response.status_code!=200:
-    await ctx.respond('Unexpected Status code: ', response.status_code)
-
+    embed.add_field(name="Error:",
+                    value=f"Unexpected response: {response.status_code}", inline = False)
+  else:
+    embed.add_field(name="Today:",
+                    value=f"Weather today: {cond} with a {percip}% chance of rain. Highs at {tempmax} degrees Celcius with a low of {tempmin} degrees with an average of {temp}. Feels like {feelslike} degrees. Sunset at {sunset} and sunrise at {sunrise}.", inline = False)
+  
+"""
 
 #Run our webserver, this is what we will ping
+
 keep_alive()
 
 #Run our bot
+
 token = os.getenv("discordtoken")
 bot.run(token)
